@@ -1,0 +1,273 @@
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>FLATTY BIRD</title>
+	<style>
+	body
+	{
+		height:100%;
+		width:100%;
+		margin:0;
+		background-color: #202020;
+	}
+	a{
+		margin-top: 10px;
+		margin-left: 10%;
+		text-decoration: none;
+		color:white;
+		font-size:28px;
+		border:2px gray solid;
+		background-color:black;
+	}
+	#container
+	{
+		position:relative;
+		height:400px;
+		width:90%;
+		top:11%;
+		border:5px solid yellow;
+		background-color:black;
+		margin-left:4%;
+		overflow:hidden;
+		box-shadow:11px 11px 11px lightgreen;
+	}
+	#bird
+	{
+		position:absolute;
+		background:url('bird.png');
+		height:55px;
+		width:80px;
+		background-size: contain;
+	    background-repeat: no repeat;
+	    top:20%;
+	    left:15%;
+	}
+	.pole
+	{
+		position:absolute;
+		height:130px;
+		width:50px;
+		background-color:#f42941;
+		right:-50px;
+	}
+	#pole_1
+	{
+		top:0;
+	}
+	#pole_2
+	{
+		bottom:0;
+	}
+    #player
+    {
+        display:none;
+    }
+     #player1
+    {
+        display:none;
+    }
+	#score_div
+	{
+      text-align:center;
+      font-size:40px;
+      background-color: lightgreen;
+      width:50%;
+      margin-left: 25%;
+      box-shadow:11px 11px 11px green;
+	}
+	#restart_btn
+	{
+		position:absolute;
+		margin-left:25%;
+		top:0;
+		width:50%;
+		padding:20px;
+		background-color: #f18383;
+		color:white;
+		text-shadow:5px 5px  grey;
+		font-size:35px;
+		border:2px solid red;
+		box-shadow:5px 5px 5px 5px red;
+		cursor:pointer;
+		display:none;
+
+	}
+
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script>
+       $(function()
+       {
+       	//saving dom objects to variables
+         var container=$('#container');
+         var bird=$('#bird');
+         var pole=$('.pole');
+         var pole_1=$('#pole_1');
+         var pole_2=$('#pole_2');
+         var score=$('#score');
+         var speed_span=$('#speed');
+         var restart_btn=$('#restart_btn');
+         
+
+         //saving some initial setup
+         var container_width=parseInt(container.width());
+         var container_height=parseInt(container.height());
+         var pole_initial_position=parseInt(pole.css('right'));
+         var pole_initial_height=parseInt(pole.css('height'));
+         var bird_left=parseInt(bird.css('left'));
+         var bird_height=parseInt(bird.height());
+
+         var speed=10;
+
+         //some other declarations
+         var go_up=false;
+         var score_updated=false;
+         var game_over=false;
+
+         if(game_over===false)
+         {
+            player1.pause();
+         }
+
+         var the_game=setInterval(function(){
+
+         	 //collision checking
+         	 if(collision(bird,pole_1)||collision(bird,pole_2)||parseInt(bird.css('top'))<=0 ||parseInt(bird.css('top'))>parseInt(container.height())-parseInt(bird.height()))
+         	 {
+                stop_the_game();
+         	 }
+         	else
+            {
+             var pole_current_position=parseInt(pole.css('right'));
+
+            	//updating score when poles pass the bird successfully
+            	if(pole_current_position> container_width - bird_left)
+            	{
+            		if(score_updated===false)
+            		{
+            		 score.text(parseInt(score.text())+1);
+            		 score_updated=true;
+            		}
+            	}
+
+
+             //check whether the poles went out of the container
+             if(pole_current_position>container_width)
+             {   
+             	//change height of poles for next round
+             	var new_height=parseInt(Math.random()*100);
+             	pole_1.css('height',pole_initial_height+ new_height);
+             	pole_2.css('height',pole_initial_height- new_height);
+
+             	//increase speed
+             	speed=speed+2;
+             	speed_span.text(speed);
+                score_updated=false;
+             	pole_current_position=pole_initial_position;
+             }
+
+             //move the poles
+             pole.css('right', pole_current_position + speed);
+
+             if(go_up===false)
+             {
+                go_down();
+             }
+         }
+
+         },40);
+
+         //moving the bird up using spacebar
+         $(document).on('keydown',function(e)
+         {
+         	var key=e.keyCode;
+         	if(key===32 && go_up===false && game_over===false)
+         	{
+         		go_up=setInterval(up,50);
+         	}
+
+         });
+        $(document).on('keyup',function(e)
+         {
+         	var key=e.keyCode;
+         	if(key===32)
+         	{
+         		clearInterval(go_up);
+         		go_up=false;
+         	}
+
+         });
+        
+         function go_down()
+         {
+         	bird.css('top',parseInt(bird.css('top'))+5);//moving bird down if spacebar is not pressed
+         }
+         function up()
+         {
+          	bird.css('top',parseInt(bird.css('top'))-10);
+         }
+
+         //stoping the game on collision
+         function stop_the_game()
+         {
+         	clearInterval(the_game);
+            var player=document.getElementById('player');
+            var oldSrc=player.src;
+            player.src="";
+            player1.play();
+         	restart_btn.slideDown();
+         	game_over=true;
+         }
+
+         //restart game if collision occurs
+         restart_btn.click(function(){
+            location.reload();
+         });
+
+         //check for collision with walls and upper and lower parts of div
+          function collision($div1,$div2)
+	   	 {
+	   	 	var x1=$div1.offset().left;
+	   	 	var y1=$div1.offset().top;
+	   	 	var h1=$div1.outerHeight(true);
+	   	 	var w1=$div1.outerWidth(true);
+	   	 	var b1=y1+h1;
+	   	 	var r1=x1+w1;
+	   	 	var x2=$div2.offset().left;
+	   	 	var y2=$div2.offset().top;
+	   	 	var h2=$div2.outerHeight(true);
+	   	 	var w2=$div2.outerWidth(true);
+	   	 	var b2=y2+h2;
+	   	 	var r2=x2+w2;
+	   	 	if(b1<y2||y1>b2||r1<x2||x1>r2)
+	   	 		return false;
+	   	 	return true;
+	   	 }
+
+       });
+	</script>
+</head>
+<body>
+	  
+
+            <audio  id="player" controls loop autoplay="true">
+            <source src="udi.mp3" type="audio/mpeg">
+            </audio>
+            <audio  id="player1" controls loop  autoplay="true">
+            <source src="kutta.mp3" type="audio/mpeg">
+            </audio>
+	 <a href="file:///C:/Users/DAMANI/Desktop/rules.html">RULES</a>
+     
+	<div id="container">
+		<div id="bird"></div>
+		<div id="pole_1" class="pole"></div>
+		<div id="pole_2" class="pole"></div>
+    </div>
+    <br><br><br><br>
+        <div id="score_div">
+    	<p style="color:black;text-shadow:5px 3px grey;"><b>SCORE:</b><span id="score">0</span></p>
+    	<p style="color:black;text-shadow:5px 3px grey;"><b>SPEED:</b><span id="speed">10</span></p>
+    </div>
+    <button id="restart_btn">RESTART</button>
+</body>
+<html>
